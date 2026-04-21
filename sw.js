@@ -4,16 +4,16 @@
 
 const CACHE_NAME = 'dompetku-v1';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/css/style.css',
-  '/js/db.js',
-  '/js/chart.js',
-  '/js/ui.js',
-  '/js/app.js',
-  '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
+  './',
+  'index.html',
+  'css/style.css',
+  'js/db.js',
+  'js/chart.js',
+  'js/ui.js',
+  'js/app.js',
+  'manifest.json',
+  'icons/icon-192.png',
+  'icons/icon-512.png',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap',
   'https://unpkg.com/lucide@latest/dist/umd/lucide.min.js',
 ];
@@ -60,7 +60,7 @@ self.addEventListener('fetch', (event) => {
       }).catch(() => {
         // Fallback: return cached index.html for navigation requests
         if (event.request.mode === 'navigate') {
-          return caches.match('/index.html');
+          return caches.match('index.html');
         }
       });
     })
