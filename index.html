@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0F0F1A" />
+  <meta name="description" content="DompetKu - Aplikasi Catatan Keuangan Modern untuk Mahasiswa" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DompetKu" />
+  <title>DompetKu — Catatan Keuangan Mahasiswa</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json" />
+  <!-- Apple Touch Icon -->
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="dark-mode">
+
+  <!-- Splash Screen -->
+  <div id="splash-screen">
+    <div class="splash-content">
+      <div class="splash-logo">
+        <div class="splash-icon">💰</div>
+        <h1 class="splash-title">DompetKu</h1>
+        <p class="splash-sub">Catatan Keuangan Mahasiswa</p>
+      </div>
+      <div class="splash-loader">
+        <div class="loader-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Authentication Pages -->
+  <div id="auth-pages" style="display:none;">
+    <!-- Login Page -->
+    <div id="page-login" class="auth-card">
+      <div class="auth-header">
+        <span class="auth-emoji">💰</span>
+        <h1 class="auth-title">Selamat Datang</h1>
+        <p class="auth-sub">Masuk ke akun DompetKu kamu</p>
+      </div>
+      <div class="auth-form">
+        <div class="form-group">
+          <label>Username / Email</label>
+          <input type="text" id="login-username" class="form-input" placeholder="Username atau email..." />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-password" class="form-input" placeholder="••••••••" />
+        </div>
+        <button class="btn-primary" id="btn-do-login" style="width:100%; margin-top:10px;">
+          <i data-lucide="log-in"></i> Masuk Sekarang
+        </button>
+        <p class="auth-footer">
+          Belum punya akun? <a href="#" id="link-to-register">Daftar di sini</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Register Page -->
+    <div id="page-register" class="auth-card" style="display:none;">
+      <div class="auth-header">
+        <span class="auth-emoji">✨</span>
+        <h1 class="auth-title">Buat Akun</h1>
+        <p class="auth-sub">Mulai kelola keuanganmu hari ini</p>
+      </div>
+      <div class="auth-form">
+        <div class="form-group">
+          <label>Nama Lengkap</label>
+          <input type="text" id="reg-name" class="form-input" placeholder="Nama lengkap kamu..." />
+        </div>
+        <div class="form-group">
+          <label>Username / Email</label>
+          <input type="text" id="reg-username" class="form-input" placeholder="Pilih username..." />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="reg-password" class="form-input" placeholder="Minimal 6 karakter..." />
+        </div>
+        <button class="btn-primary" id="btn-do-register" style="width:100%; margin-top:10px;">
+          <i data-lucide="user-plus"></i> Daftar Sekarang
+        </button>
+        <p class="auth-footer">
+          Sudah punya akun? <a href="#" id="link-to-login">Login di sini</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Shell -->
+  <div id="app" style="display:none;">
+
+    <!-- Top Header -->
+    <header class="app-header" id="app-header">
+      <div class="header-left">
+        <button class="icon-btn" id="menu-toggle" aria-label="Menu">
+          <i data-lucide="menu"></i>
+        </button>
+        <div class="header-brand">
+          <span class="brand-emoji">💰</span>
+          <span class="brand-name">DompetKu</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="icon-btn" id="theme-toggle" aria-label="Toggle Theme">
+          <i data-lucide="sun" id="theme-icon"></i>
+        </button>
+        <button class="icon-btn" id="notif-btn" aria-label="Notifikasi">
+          <i data-lucide="bell"></i>
+          <span class="notif-badge" id="notif-badge" style="display:none;">!</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="user-avatar">
+          <span id="avatar-emoji">🎓</span>
+        </div>
+        <div class="user-info">
+          <p class="user-name" id="sidebar-username">Mahasiswa</p>
+          <p class="user-label">Pengguna DompetKu</p>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="dashboard">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-page="transaksi">
+          <i data-lucide="arrow-left-right"></i>
+          <span>Transaksi</span>
+        </a>
+        <a href="#" class="nav-item" data-page="budget">
+          <i data-lucide="target"></i>
+          <span>Anggaran</span>
+        </a>
+        <a href="#" class="nav-item" data-page="laporan">
+          <i data-lucide="bar-chart-2"></i>
+          <span>Laporan</span>
+        </a>
+        <a href="#" class="nav-item" data-page="pengaturan">
+          <i data-lucide="settings"></i>
+          <span>Pengaturan</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="app-version">v1.0.0 · DompetKu PWA</div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content" id="main-content">
+
+      <!-- ===== PAGE: DASHBOARD ===== -->
+      <div id="page-dashboard" class="page active">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title" id="greeting-text">Halo! 👋</h1>
+            <p class="page-subtitle" id="today-date">Senin, 21 April 2026</p>
+          </div>
+          <button class="btn-primary btn-sm" id="quick-add-btn">
+            <i data-lucide="plus"></i> Tambah
+          </button>
+        </div>
+
+        <!-- Balance Card -->
+        <div class="balance-card">
+          <div class="balance-card-inner">
+            <div class="balance-label">Total Saldo</div>
+            <div class="balance-amount" id="total-balance">Rp 0</div>
+            <div class="balance-meta">
+              <span id="balance-month">April 2026</span>
+            </div>
+            <div class="balance-stats">
+              <div class="balance-stat income">
+                <div class="stat-icon"><i data-lucide="trending-up"></i></div>
+                <div class="stat-info">
+                  <span class="stat-label">Pemasukan</span>
+                  <span class="stat-value" id="total-income">Rp 0</span>
+                </div>
+              </div>
+              <div class="balance-divider"></div>
+              <div class="balance-stat expense">
+                <div class="stat-icon"><i data-lucide="trending-down"></i></div>
+                <div class="stat-info">
+                  <span class="stat-label">Pengeluaran</span>
+                  <span class="stat-value" id="total-expense">Rp 0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="balance-card-bg"></div>
+        </div>
+
+        <!-- Donut Chart -->
+        <div class="card chart-card">
+          <div class="card-header">
+            <h3>Distribusi Pengeluaran</h3>
+            <span class="card-badge" id="chart-month-label">Bulan Ini</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="donut-chart" width="160" height="160"></canvas>
+            <div class="chart-legend" id="chart-legend"></div>
+          </div>
+          <div id="chart-empty" class="chart-empty" style="display:none;">
+            <i data-lucide="pie-chart"></i>
+            <p>Belum ada data pengeluaran</p>
+          </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Transaksi Terbaru</h3>
+            <button class="link-btn" data-page="transaksi">Lihat Semua</button>
+          </div>
+          <div id="recent-list" class="transaction-list">
+            <div class="empty-state">
+              <i data-lucide="inbox"></i>
+              <p>Belum ada transaksi</p>
+              <small>Tap "Tambah" untuk mulai mencatat</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Budget Snapshot -->
+        <div class="card" id="budget-snapshot-card">
+          <div class="card-header">
+            <h3>Status Anggaran</h3>
+            <button class="link-btn" data-page="budget">Kelola</button>
+          </div>
+          <div id="budget-snapshot" class="budget-snapshot">
+            <div class="empty-state">
+              <i data-lucide="target"></i>
+              <p>Belum ada anggaran</p>
+              <small>Set anggaran per kategori di menu Anggaran</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PAGE: TRANSAKSI ===== -->
+      <div id="page-transaksi" class="page">
+        <div class="page-header">
+          <h1 class="page-title">Transaksi</h1>
+          <button class="btn-primary btn-sm" id="add-trx-btn">
+            <i data-lucide="plus"></i> Tambah
+          </button>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="semua">Semua</button>
+            <button class="filter-tab" data-filter="pemasukan">Pemasukan</button>
+            <button class="filter-tab" data-filter="pengeluaran">Pengeluaran</button>
+          </div>
+          <div class="search-box">
+            <i data-lucide="search"></i>
+            <input type="text" id="search-input" placeholder="Cari transaksi..." />
+          </div>
+        </div>
+
+        <!-- Month Picker -->
+        <div class="month-picker">
+          <button class="icon-btn" id="prev-month"><i data-lucide="chevron-left"></i></button>
+          <span id="current-filter-month">April 2026</span>
+          <button class="icon-btn" id="next-month"><i data-lucide="chevron-right"></i></button>
+        </div>
+
+        <!-- Transaction List -->
+        <div id="trx-list" class="transaction-list">
+          <div class="empty-state">
+            <i data-lucide="inbox"></i>
+            <p>Belum ada transaksi</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PAGE: BUDGET ===== -->
+      <div id="page-budget" class="page">
+        <div class="page-header">
+          <h1 class="page-title">Anggaran</h1>
+          <button class="btn-primary btn-sm" id="add-budget-btn">
+            <i data-lucide="plus"></i> Set Anggaran
+          </button>
+        </div>
+        <div class="budget-month-info card" style="padding:14px 16px; margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <i data-lucide="calendar"></i>
+            <span id="budget-month-label" style="font-weight:600;"></span>
+          </div>
+        </div>
+        <div id="budget-list" class="budget-list">
+          <div class="empty-state">
+            <i data-lucide="target"></i>
+            <p>Belum ada anggaran</p>
+            <small>Tap "Set Anggaran" untuk mulai</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PAGE: LAPORAN ===== -->
+      <div id="page-laporan" class="page">
+        <div class="page-header">
+          <h1 class="page-title">Laporan</h1>
+          <button class="btn-outline btn-sm" id="export-csv-btn">
+            <i data-lucide="download"></i> CSV
+          </button>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="report-summary">
+          <div class="report-card income-card">
+            <i data-lucide="trending-up"></i>
+            <div>
+              <p>Total Pemasukan</p>
+              <h3 id="report-income">Rp 0</h3>
+            </div>
+          </div>
+          <div class="report-card expense-card">
+            <i data-lucide="trending-down"></i>
+            <div>
+              <p>Total Pengeluaran</p>
+              <h3 id="report-expense">Rp 0</h3>
+            </div>
+          </div>
+          <div class="report-card balance-card-sm">
+            <i data-lucide="wallet"></i>
+            <div>
+              <p>Net Saldo</p>
+              <h3 id="report-net">Rp 0</h3>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly Bar Chart -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Tren 6 Bulan Terakhir</h3>
+          </div>
+          <div class="bar-chart-wrap">
+            <canvas id="bar-chart" width="320" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- Category Breakdown -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Pengeluaran per Kategori</h3>
+          </div>
+          <div id="category-breakdown" class="category-breakdown">
+            <div class="empty-state">
+              <i data-lucide="bar-chart-2"></i>
+              <p>Belum ada data</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PAGE: PENGATURAN ===== -->
+      <div id="page-pengaturan" class="page">
+        <div class="page-header">
+          <h1 class="page-title">Pengaturan</h1>
+        </div>
+
+        <div class="card settings-card">
+          <h3 class="settings-section-title">Profil</h3>
+          <div class="form-group">
+            <label>Nama Kamu</label>
+            <input type="text" id="setting-name" class="form-input" placeholder="Masukkan namamu..." />
+          </div>
+          <div class="form-group">
+            <label>Avatar</label>
+            <div class="avatar-picker" id="avatar-picker">
+              <span class="avatar-opt selected" data-emoji="🎓">🎓</span>
+              <span class="avatar-opt" data-emoji="👨‍💻">👨‍💻</span>
+              <span class="avatar-opt" data-emoji="👩‍💻">👩‍💻</span>
+              <span class="avatar-opt" data-emoji="🧑‍🎓">🧑‍🎓</span>
+              <span class="avatar-opt" data-emoji="😎">😎</span>
+              <span class="avatar-opt" data-emoji="🦊">🦊</span>
+              <span class="avatar-opt" data-emoji="🐧">🐧</span>
+              <span class="avatar-opt" data-emoji="🌟">🌟</span>
+            </div>
+          </div>
+          <button class="btn-primary" id="save-profile-btn" style="width:100%;">
+            <i data-lucide="save"></i> Simpan Profil
+          </button>
+        </div>
+
+        <div class="card settings-card">
+          <h3 class="settings-section-title">Preferensi</h3>
+          <div class="settings-row">
+            <div>
+              <p class="settings-label">Mode Gelap</p>
+              <small>Tampilan tema gelap/terang</small>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="dark-mode-toggle" checked />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-row">
+            <div>
+              <p class="settings-label">Format Mata Uang</p>
+              <small>Rp (Rupiah Indonesia)</small>
+            </div>
+            <span class="badge-pill">IDR</span>
+          </div>
+        </div>
+
+        <div class="card settings-card danger-zone">
+          <h3 class="settings-section-title" style="color: var(--danger);">Zona Bahaya</h3>
+          <button class="btn-danger" id="clear-data-btn" style="width:100%; margin-bottom: 12px;">
+            <i data-lucide="trash-2"></i> Hapus Semua Data
+          </button>
+          <button class="btn-outline" id="btn-logout" style="width:100%; color: var(--text); border-color: var(--card-border);">
+            <i data-lucide="log-out"></i> Keluar (Logout)
+          </button>
+        </div>
+
+        <div class="card settings-card">
+          <h3 class="settings-section-title">Install Aplikasi</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">Tambahkan DompetKu ke layar utama ponselmu untuk pengalaman terbaik.</p>
+          <button class="btn-outline" id="install-btn" style="width:100%;">
+            <i data-lucide="smartphone"></i> Install DompetKu
+          </button>
+          <div id="install-note" style="font-size:0.8rem;color:var(--text-muted);margin-top:8px;text-align:center;"></div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" id="bottom-nav">
+      <button class="bottom-nav-item active" data-page="dashboard">
+        <i data-lucide="layout-dashboard"></i>
+        <span>Beranda</span>
+      </button>
+      <button class="bottom-nav-item" data-page="transaksi">
+        <i data-lucide="arrow-left-right"></i>
+        <span>Transaksi</span>
+      </button>
+      <button class="bottom-nav-item fab-btn" id="fab-add">
+        <div class="fab-circle">
+          <i data-lucide="plus"></i>
+        </div>
+      </button>
+      <button class="bottom-nav-item" data-page="laporan">
+        <i data-lucide="bar-chart-2"></i>
+        <span>Laporan</span>
+      </button>
+      <button class="bottom-nav-item" data-page="pengaturan">
+        <i data-lucide="settings"></i>
+        <span>Setelan</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ===== MODAL: TAMBAH TRANSAKSI ===== -->
+  <div class="modal-overlay" id="trx-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-title">Tambah Transaksi</h2>
+        <button class="icon-btn modal-close" id="close-trx-modal"><i data-lucide="x"></i></button>
+      </div>
+
+      <!-- Type Tabs -->
+      <div class="type-tabs">
+        <button class="type-tab active" data-type="pengeluaran" id="tab-expense">
+          <i data-lucide="minus-circle"></i> Pengeluaran
+        </button>
+        <button class="type-tab" data-type="pemasukan" id="tab-income">
+          <i data-lucide="plus-circle"></i> Pemasukan
+        </button>
+      </div>
+
+      <!-- Amount -->
+      <div class="amount-input-wrap">
+        <span class="currency-prefix">Rp</span>
+        <input type="number" id="trx-amount" class="amount-input" placeholder="0" min="0" inputmode="numeric" />
+      </div>
+
+      <div class="modal-form">
+        <!-- Category -->
+        <div class="form-group">
+          <label>Kategori</label>
+          <div class="category-grid" id="category-grid"></div>
+        </div>
+        <!-- Description -->
+        <div class="form-group">
+          <label>Deskripsi (opsional)</label>
+          <input type="text" id="trx-desc" class="form-input" placeholder="Contoh: Makan siang di kantin..." />
+        </div>
+        <!-- Date -->
+        <div class="form-group">
+          <label>Tanggal</label>
+          <input type="date" id="trx-date" class="form-input" />
+        </div>
+        <!-- Submit -->
+        <button class="btn-primary" id="save-trx-btn" style="width:100%;">
+          <i data-lucide="check"></i> Simpan Transaksi
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: SET BUDGET ===== -->
+  <div class="modal-overlay" id="budget-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Set Anggaran</h2>
+        <button class="icon-btn modal-close" id="close-budget-modal"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-form">
+        <div class="form-group">
+          <label>Kategori</label>
+          <div class="category-grid" id="budget-category-grid"></div>
+        </div>
+        <div class="form-group">
+          <label>Jumlah Anggaran (Rp)</label>
+          <div class="amount-input-wrap" style="margin-top:0;">
+            <span class="currency-prefix">Rp</span>
+            <input type="number" id="budget-amount" class="amount-input" placeholder="0" min="0" inputmode="numeric" />
+          </div>
+        </div>
+        <button class="btn-primary" id="save-budget-btn" style="width:100%;">
+          <i data-lucide="check"></i> Simpan Anggaran
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: KONFIRMASI HAPUS ===== -->
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2 id="confirm-title">Konfirmasi</h2>
+        <button class="icon-btn modal-close" id="close-confirm-modal"><i data-lucide="x"></i></button>
+      </div>
+      <p id="confirm-message" style="margin-bottom:20px; color:var(--text-muted); font-size:0.9rem;"></p>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-outline" id="confirm-cancel" style="flex:1;">Batal</button>
+        <button class="btn-danger" id="confirm-ok" style="flex:1;">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast"></div>
+
+  <!-- JavaScript -->
+  <script src="js/db.js"></script>
+  <script src="js/chart.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
