@@ -497,7 +497,34 @@
       <!-- Amount -->
       <div class="amount-input-wrap">
         <span class="currency-prefix">Rp</span>
-        <input type="number" id="trx-amount" class="amount-input" placeholder="0" min="0" inputmode="numeric" />
+        <input type="text" id="trx-amount" class="amount-input" placeholder="0" inputmode="numeric" pattern="[0-9.,]*" />
+      </div>
+      
+      <!-- Custom Number Pad -->
+      <div class="number-pad">
+        <div class="number-row">
+          <button class="num-btn" data-num="1">1</button>
+          <button class="num-btn" data-num="2">2</button>
+          <button class="num-btn" data-num="3">3</button>
+        </div>
+        <div class="number-row">
+          <button class="num-btn" data-num="4">4</button>
+          <button class="num-btn" data-num="5">5</button>
+          <button class="num-btn" data-num="6">6</button>
+        </div>
+        <div class="number-row">
+          <button class="num-btn" data-num="7">7</button>
+          <button class="num-btn" data-num="8">8</button>
+          <button class="num-btn" data-num="9">9</button>
+        </div>
+        <div class="number-row">
+          <button class="num-btn zero-btn" data-num="0">0</button>
+          <button class="num-btn zero-btn" data-num="0">0</button>
+          <button class="num-btn zero-btn" data-num="0">0</button>
+          <button class="num-btn del-btn" data-action="backspace">
+            <i data-lucide="delete"></i>
+          </button>
+        </div>
       </div>
 
       <div class="modal-form">
@@ -540,7 +567,34 @@
           <label>Jumlah Anggaran (Rp)</label>
           <div class="amount-input-wrap" style="margin-top:0;">
             <span class="currency-prefix">Rp</span>
-            <input type="number" id="budget-amount" class="amount-input" placeholder="0" min="0" inputmode="numeric" />
+            <input type="text" id="budget-amount" class="amount-input" placeholder="0" inputmode="numeric" pattern="[0-9.,]*" />
+          </div>
+        </div>
+        
+        <!-- Custom Number Pad for Budget -->
+        <div class="number-pad">
+          <div class="number-row">
+            <button class="num-btn budget-num" data-num="1">1</button>
+            <button class="num-btn budget-num" data-num="2">2</button>
+            <button class="num-btn budget-num" data-num="3">3</button>
+          </div>
+          <div class="number-row">
+            <button class="num-btn budget-num" data-num="4">4</button>
+            <button class="num-btn budget-num" data-num="5">5</button>
+            <button class="num-btn budget-num" data-num="6">6</button>
+          </div>
+          <div class="number-row">
+            <button class="num-btn budget-num" data-num="7">7</button>
+            <button class="num-btn budget-num" data-num="8">8</button>
+            <button class="num-btn budget-num" data-num="9">9</button>
+          </div>
+          <div class="number-row">
+            <button class="num-btn zero-btn budget-num" data-num="0">0</button>
+            <button class="num-btn zero-btn budget-num" data-num="0">0</button>
+            <button class="num-btn zero-btn budget-num" data-num="0">0</button>
+            <button class="num-btn del-btn budget-del" data-action="backspace">
+              <i data-lucide="delete"></i>
+            </button>
           </div>
         </div>
         <button class="btn-primary" id="save-budget-btn" style="width:100%;">

@@ -546,6 +546,7 @@ img { max-width: 100%; }
   border-radius: var(--radius-sm);
   transition: all var(--transition);
   animation: fadeSlide 0.3s ease;
+  min-height: 64px;
 }
 @keyframes fadeSlide {
   from { opacity: 0; transform: translateY(8px); }
@@ -1372,4 +1373,119 @@ body:not(.logged-in) .sidebar-overlay {
 body:not(.logged-in) .main-content {
   padding-top: 0;
   padding-bottom: 0;
+}
+/* =====================================================
+   NUMBER PAD
+   ===================================================== */
+.number-pad {
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.number-row {
+  display: flex;
+  gap: 8px;
+}
+
+.num-btn {
+  flex: 1;
+  height: 48px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text);
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.num-btn:active {
+  background: var(--card-hover);
+  transform: scale(0.95);
+}
+
+.zero-btn {
+  flex: 1;
+}
+
+.del-btn {
+  flex: 1;
+  background: var(--expense-bg);
+  color: var(--expense);
+}
+
+.del-btn svg {
+  width: 20px;
+  height: 20px;
+}
+/* =====================================================
+   LAYOUT FIXES
+   ===================================================== */
+/* Fix for layout flickering during navigation */
+.page {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.page.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Fix for chart container sizing */
+.chart-container {
+  min-height: 180px;
+  position: relative;
+}
+
+/* Fix for transaction list overflow */
+.trx-info {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.trx-cat, .trx-desc {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Fix for amount display */
+.trx-amount {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Fix for budget snapshot */
+.budget-snap-item {
+  padding: 8px 0;
+}
+
+/* Fix for modal content shifting */
+.modal {
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Fix for input focus states */
+.amount-input:focus {
+  outline: none;
+}
+
+/* Fix for number pad buttons on touch devices */
+@media (max-width: 480px) {
+  .num-btn {
+    height: 56px;
+    font-size: 1.3rem;
+  }
+  
+  .number-row {
+    gap: 6px;
+  }
 }

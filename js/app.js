@@ -102,11 +102,43 @@ const App = {
      NAVIGATION
      =================================================== */
   navigate(page) {
-    // Hide all pages
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    // If already on this page, do nothing
+    if (this.currentPage === page) return;
+    
+    // Hide current page with fade out
+    const currentPageEl = document.getElementById(`page-${this.currentPage}`);
+    if (currentPageEl) {
+      currentPageEl.style.opacity = '0';
+      currentPageEl.style.transform = 'translateY(10px)';
+    }
+    
     // Show target page
     const target = document.getElementById(`page-${page}`);
-    if (target) target.classList.add('active');
+    if (target) {
+      target.classList.add('active');
+      target.style.opacity = '0';
+      target.style.transform = 'translateY(10px)';
+      
+      // Trigger reflow
+      target.offsetHeight;
+      
+      // Fade in
+      setTimeout(() => {
+        target.style.opacity = '1';
+        target.style.transform = 'translateY(0)';
+      }, 10);
+    }
+
+    // Hide other pages after transition
+    setTimeout(() => {
+      document.querySelectorAll('.page').forEach(p => {
+        if (p.id !== `page-${page}`) {
+          p.classList.remove('active');
+          p.style.opacity = '';
+          p.style.transform = '';
+        }
+      });
+    }, 300);
 
     // Update nav items
     document.querySelectorAll('.bottom-nav-item[data-page]').forEach(btn => {
@@ -120,7 +152,11 @@ const App = {
     this.closeSidebar();
 
     this.currentPage = page;
-    this.renderCurrentPage();
+    
+    // Render after transition
+    setTimeout(() => {
+      this.renderCurrentPage();
+    }, 100);
 
     // Scroll to top
     document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -387,7 +423,9 @@ const App = {
   },
 
   saveTrx() {
-    const amount = parseFloat(document.getElementById('trx-amount')?.value);
+    const amountInput = document.getElementById('trx-amount')?.value || '';
+    // Parse formatted amount (remove thousand separators)
+    const amount = parseFloat(amountInput.replace(/\./g, '')) || 0;
     const desc = document.getElementById('trx-desc')?.value?.trim();
     const date = document.getElementById('trx-date')?.value;
     const cat = UI.getSelectedCategory('category-grid');
@@ -429,7 +467,9 @@ const App = {
   },
 
   saveBudget() {
-    const amount = parseFloat(document.getElementById('budget-amount')?.value);
+    const amountInput = document.getElementById('budget-amount')?.value || '';
+    // Parse formatted amount (remove thousand separators)
+    const amount = parseFloat(amountInput.replace(/\./g, '')) || 0;
     const cat = UI.getSelectedCategory('budget-category-grid');
 
     if (!cat) {
@@ -551,6 +591,76 @@ const App = {
 
     // --- Save Transaction ---
     document.getElementById('save-trx-btn')?.addEventListener('click', () => this.saveTrx());
+
+    // --- Format Amount Input Real-time ---
+    document.getElementById('trx-amount')?.addEventListener('input', (e) => {
+      const input = e.target;
+      const cursorPos = input.selectionStart;
+      const rawValue = input.value.replace(/\./g, '');
+      const formatted = rawValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      input.value = formatted;
+      
+      // Restore cursor position
+      const diff = formatted.length - input.value.length;
+      input.setSelectionRange(cursorPos + diff, cursorPos + diff);
+    });
+
+    // --- Format Budget Amount Input Real-time ---
+    document.getElementById('budget-amount')?.addEventListener('input', (e) => {
+      const input = e.target;
+      const cursorPos = input.selectionStart;
+      const rawValue = input.value.replace(/\./g, '');
+      const formatted = rawValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      input.value = formatted;
+      
+      // Restore cursor position
+      const diff = formatted.length - input.value.length;
+      input.setSelectionRange(cursorPos + diff, cursorPos + diff);
+    });
+
+    // --- Number Pad Events ---
+    document.querySelectorAll('.num-btn[data-num]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const num = btn.dataset.num;
+        const input = document.getElementById('trx-amount');
+        if (input) {
+          const current = input.value.replace(/\./g, '');
+          input.value = (current + num).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+          input.dispatchEvent(new Event('input'));
+        }
+      });
+    });
+
+    document.querySelector('.del-btn[data-action="backspace"]')?.addEventListener('click', () => {
+      const input = document.getElementById('trx-amount');
+      if (input && input.value.length > 0) {
+        const current = input.value.replace(/\./g, '');
+        input.value = current.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        input.dispatchEvent(new Event('input'));
+      }
+    });
+
+    // --- Budget Number Pad Events ---
+    document.querySelectorAll('.budget-num[data-num]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const num = btn.dataset.num;
+        const input = document.getElementById('budget-amount');
+        if (input) {
+          const current = input.value.replace(/\./g, '');
+          input.value = (current + num).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+          input.dispatchEvent(new Event('input'));
+        }
+      });
+    });
+
+    document.querySelector('.budget-del[data-action="backspace"]')?.addEventListener('click', () => {
+      const input = document.getElementById('budget-amount');
+      if (input && input.value.length > 0) {
+        const current = input.value.replace(/\./g, '');
+        input.value = current.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        input.dispatchEvent(new Event('input'));
+      }
+    });
 
     // --- Transaction Modal Close ---
     document.getElementById('close-trx-modal')?.addEventListener('click', () => UI.closeModal('trx-modal'));

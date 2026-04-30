@@ -32,6 +32,20 @@ const UI = {
     return 'Rp ' + Number(amount).toLocaleString('id-ID');
   },
 
+  /* ---- Format Input Amount ---- */
+  formatAmountInput(value) {
+    // Remove non-numeric characters except decimal point
+    const num = value.replace(/[^\d]/g, '');
+    // Format with thousand separators
+    return num.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  },
+
+  /* ---- Parse Formatted Amount ---- */
+  parseFormattedAmount(formatted) {
+    // Remove thousand separators and convert to number
+    return parseFloat(formatted.replace(/\./g, '')) || 0;
+  },
+
   /* ---- Format Date ---- */
   formatDate(dateStr) {
     const d = new Date(dateStr);
