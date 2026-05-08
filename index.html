@@ -323,9 +323,14 @@
       <div id="page-laporan" class="page">
         <div class="page-header">
           <h1 class="page-title">Laporan</h1>
-          <button class="btn-outline btn-sm" id="export-csv-btn">
-            <i data-lucide="download"></i> CSV
-          </button>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-outline btn-sm" id="import-csv-btn">
+              <i data-lucide="upload"></i> Import
+            </button>
+            <button class="btn-outline btn-sm" id="export-csv-btn">
+              <i data-lucide="download"></i> Export
+            </button>
+          </div>
         </div>
 
         <!-- Summary Cards -->
@@ -499,33 +504,6 @@
         <span class="currency-prefix">Rp</span>
         <input type="text" id="trx-amount" class="amount-input" placeholder="0" inputmode="numeric" pattern="[0-9.,]*" />
       </div>
-      
-      <!-- Custom Number Pad -->
-      <div class="number-pad">
-        <div class="number-row">
-          <button class="num-btn" data-num="1">1</button>
-          <button class="num-btn" data-num="2">2</button>
-          <button class="num-btn" data-num="3">3</button>
-        </div>
-        <div class="number-row">
-          <button class="num-btn" data-num="4">4</button>
-          <button class="num-btn" data-num="5">5</button>
-          <button class="num-btn" data-num="6">6</button>
-        </div>
-        <div class="number-row">
-          <button class="num-btn" data-num="7">7</button>
-          <button class="num-btn" data-num="8">8</button>
-          <button class="num-btn" data-num="9">9</button>
-        </div>
-        <div class="number-row">
-          <button class="num-btn zero-btn" data-num="0">0</button>
-          <button class="num-btn zero-btn" data-num="0">0</button>
-          <button class="num-btn zero-btn" data-num="0">0</button>
-          <button class="num-btn del-btn" data-action="backspace">
-            <i data-lucide="delete"></i>
-          </button>
-        </div>
-      </div>
 
       <div class="modal-form">
         <!-- Category -->
@@ -570,33 +548,6 @@
             <input type="text" id="budget-amount" class="amount-input" placeholder="0" inputmode="numeric" pattern="[0-9.,]*" />
           </div>
         </div>
-        
-        <!-- Custom Number Pad for Budget -->
-        <div class="number-pad">
-          <div class="number-row">
-            <button class="num-btn budget-num" data-num="1">1</button>
-            <button class="num-btn budget-num" data-num="2">2</button>
-            <button class="num-btn budget-num" data-num="3">3</button>
-          </div>
-          <div class="number-row">
-            <button class="num-btn budget-num" data-num="4">4</button>
-            <button class="num-btn budget-num" data-num="5">5</button>
-            <button class="num-btn budget-num" data-num="6">6</button>
-          </div>
-          <div class="number-row">
-            <button class="num-btn budget-num" data-num="7">7</button>
-            <button class="num-btn budget-num" data-num="8">8</button>
-            <button class="num-btn budget-num" data-num="9">9</button>
-          </div>
-          <div class="number-row">
-            <button class="num-btn zero-btn budget-num" data-num="0">0</button>
-            <button class="num-btn zero-btn budget-num" data-num="0">0</button>
-            <button class="num-btn zero-btn budget-num" data-num="0">0</button>
-            <button class="num-btn del-btn budget-del" data-action="backspace">
-              <i data-lucide="delete"></i>
-            </button>
-          </div>
-        </div>
         <button class="btn-primary" id="save-budget-btn" style="width:100%;">
           <i data-lucide="check"></i> Simpan Anggaran
         </button>
@@ -619,10 +570,68 @@
     </div>
   </div>
 
+  <!-- ===== MODAL: IMPORT CSV/EXCEL ===== -->
+  <div class="modal-overlay" id="import-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Import Data Transaksi</h2>
+        <button class="icon-btn modal-close" id="close-import-modal"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-form">
+        <div class="import-info-card">
+          <div style="display: flex; align-items: flex-start; gap: 12px;">
+            <i data-lucide="info" style="width: 20px; height: 20px; color: var(--primary); flex-shrink: 0; margin-top: 2px;"></i>
+            <div>
+              <p style="font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Format File yang Didukung</p>
+              <ul style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; padding-left: 18px;">
+                <li>CSV (.csv) atau Excel (.xlsx, .xls)</li>
+                <li>Kolom: Tanggal, Tipe, Kategori, Deskripsi, Jumlah</li>
+                <li>Tipe: "pemasukan" atau "pengeluaran"</li>
+                <li>Format tanggal: YYYY-MM-DD (contoh: 2026-05-08)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Pilih File</label>
+          <input type="file" id="import-file-input" class="form-input" accept=".csv,.xlsx,.xls" style="padding: 10px;" />
+        </div>
+
+        <div id="import-preview" style="display: none;">
+          <div class="form-group">
+            <label>Preview Data (5 baris pertama)</label>
+            <div id="import-preview-content" style="overflow-x: auto; font-size: 0.75rem; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-sm); padding: 12px;">
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; padding: 10px; background: var(--income-bg); border-radius: var(--radius-sm); margin-bottom: 8px;">
+            <i data-lucide="check-circle" style="width: 18px; height: 18px; color: var(--income);"></i>
+            <span style="font-size: 0.82rem; color: var(--income); font-weight: 600;" id="import-count-text">0 transaksi siap diimpor</span>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="do-import-btn" style="width:100%;" disabled>
+          <i data-lucide="upload"></i> Import Transaksi
+        </button>
+
+        <div style="margin-top: 12px;">
+          <button class="link-btn" id="download-template-btn" style="font-size: 0.8rem; display: flex; align-items: center; gap: 6px; margin: 0 auto;">
+            <i data-lucide="file-down" style="width: 14px; height: 14px;"></i>
+            Download Template CSV
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification -->
   <div class="toast" id="toast"></div>
+  
+  <!-- Hidden file input for import -->
+  <input type="file" id="hidden-import-input" accept=".csv,.xlsx,.xls" style="display: none;" />
 
   <!-- JavaScript -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <script src="js/db.js"></script>
   <script src="js/chart.js"></script>
   <script src="js/ui.js"></script>

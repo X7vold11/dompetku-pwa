@@ -502,14 +502,241 @@ const App = {
       t.amount,
     ]);
     const csv = [header, ...rows].map(r => r.join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `DompetKu_${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `DompetKu_Export_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     UI.toast('Data berhasil diekspor! 📊', 'success');
+  },
+
+  /* ===================================================
+     IMPORT CSV/EXCEL
+     =================================================== */
+  importData: null,
+
+  openImportModal() {
+    // Reset state
+    this.importData = null;
+    const fileInput = document.getElementById('import-file-input');
+    if (fileInput) fileInput.value = '';
+    document.getElementById('import-preview').style.display = 'none';
+    document.getElementById('do-import-btn').disabled = true;
+    
+    UI.openModal('import-modal');
+    lucide.createIcons();
+  },
+
+  downloadTemplate() {
+    const header = ['Tanggal', 'Tipe', 'Kategori', 'Deskripsi', 'Jumlah'];
+    const examples = [
+      ['2026-05-01', 'pengeluaran', 'Makan', 'Makan siang di kantin', '25000'],
+      ['2026-05-02', 'pemasukan', 'Beasiswa', 'Beasiswa bulanan', '1000000'],
+      ['2026-05-03', 'pengeluaran', 'Transport', 'Ongkos angkot', '10000'],
+      ['2026-05-04', 'pengeluaran', 'Belanja', 'Beli buku tulis', '15000'],
+      ['2026-05-05', 'pemasukan', 'Freelance', 'Project website', '500000'],
+    ];
+    const csv = [header, ...examples].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'DompetKu_Template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    UI.toast('Template berhasil diunduh! 📄', 'success');
+  },
+
+  handleImportFile(file) {
+    if (!file) return;
+
+    const reader = new FileReader();
+    const fileName = file.name.toLowerCase();
+
+    reader.onload = (e) => {
+      try {
+        let data;
+        
+        if (fileName.endsWith('.csv')) {
+          // Parse CSV
+          const text = e.target.result;
+          data = this.parseCSV(text);
+        } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+          // Parse Excel using SheetJS
+          const arrayBuffer = e.target.result;
+          const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+          data = this.parseArrayData(jsonData);
+        } else {
+          UI.toast('Format file tidak didukung!', 'error');
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          UI.toast('File kosong atau format tidak valid!', 'error');
+          return;
+        }
+
+        // Validate and prepare data
+        const validData = this.validateImportData(data);
+        
+        if (validData.length === 0) {
+          UI.toast('Tidak ada data valid untuk diimpor!', 'error');
+          return;
+        }
+
+        this.importData = validData;
+        this.showImportPreview(validData);
+        document.getElementById('do-import-btn').disabled = false;
+
+      } catch (error) {
+        console.error('Import error:', error);
+        UI.toast('Gagal membaca file. Pastikan format sesuai!', 'error');
+      }
+    };
+
+    if (fileName.endsWith('.csv')) {
+      reader.readAsText(file);
+    } else {
+      reader.readAsArrayBuffer(file);
+    }
+  },
+
+  parseCSV(text) {
+    const lines = text.split('\n').filter(line => line.trim());
+    if (lines.length < 2) return [];
+    
+    // Skip header
+    const dataLines = lines.slice(1);
+    return dataLines.map(line => {
+      // Simple CSV parser (handles basic cases)
+      const values = line.split(',').map(v => v.trim().replace(/^["']|["']$/g, ''));
+      return values;
+    });
+  },
+
+  parseArrayData(jsonData) {
+    if (jsonData.length < 2) return [];
+    // Skip header row
+    return jsonData.slice(1);
+  },
+
+  validateImportData(data) {
+    const validData = [];
+    const allCategories = [...CATEGORIES.pengeluaran, ...CATEGORIES.pemasukan];
+
+    data.forEach((row, index) => {
+      if (row.length < 5) return; // Skip incomplete rows
+
+      const [dateStr, type, category, description, amountStr] = row;
+      
+      // Validate date
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        console.warn(`Row ${index + 2}: Invalid date "${dateStr}"`);
+        return;
+      }
+
+      // Validate type
+      const normalizedType = type.toLowerCase().trim();
+      if (normalizedType !== 'pemasukan' && normalizedType !== 'pengeluaran') {
+        console.warn(`Row ${index + 2}: Invalid type "${type}"`);
+        return;
+      }
+
+      // Validate amount
+      const amount = parseFloat(String(amountStr).replace(/[^\d.-]/g, ''));
+      if (isNaN(amount) || amount <= 0) {
+        console.warn(`Row ${index + 2}: Invalid amount "${amountStr}"`);
+        return;
+      }
+
+      // Find matching category
+      const categoryList = normalizedType === 'pemasukan' ? CATEGORIES.pemasukan : CATEGORIES.pengeluaran;
+      let matchedCategory = categoryList.find(c => c.name.toLowerCase() === category.toLowerCase().trim());
+      
+      // If not found, use "Lainnya"
+      if (!matchedCategory) {
+        matchedCategory = categoryList.find(c => c.name === 'Lainnya');
+      }
+
+      validData.push({
+        date: date.toISOString().split('T')[0],
+        type: normalizedType,
+        category: matchedCategory.name,
+        emoji: matchedCategory.emoji,
+        description: String(description || '').trim(),
+        amount: amount,
+      });
+    });
+
+    return validData;
+  },
+
+  showImportPreview(data) {
+    const previewDiv = document.getElementById('import-preview');
+    const contentDiv = document.getElementById('import-preview-content');
+    const countText = document.getElementById('import-count-text');
+
+    if (!previewDiv || !contentDiv || !countText) return;
+
+    // Show first 5 rows
+    const preview = data.slice(0, 5);
+    let html = '<table style="width: 100%; border-collapse: collapse;">';
+    html += '<thead><tr style="border-bottom: 1px solid var(--card-border);">';
+    html += '<th style="padding: 6px; text-align: left;">Tanggal</th>';
+    html += '<th style="padding: 6px; text-align: left;">Tipe</th>';
+    html += '<th style="padding: 6px; text-align: left;">Kategori</th>';
+    html += '<th style="padding: 6px; text-align: right;">Jumlah</th>';
+    html += '</tr></thead><tbody>';
+
+    preview.forEach(item => {
+      const typeColor = item.type === 'pemasukan' ? 'var(--income)' : 'var(--expense)';
+      html += '<tr style="border-bottom: 1px solid var(--card-border);">';
+      html += `<td style="padding: 6px;">${UI.formatDate(item.date)}</td>`;
+      html += `<td style="padding: 6px; color: ${typeColor};">${item.type}</td>`;
+      html += `<td style="padding: 6px;">${item.emoji} ${item.category}</td>`;
+      html += `<td style="padding: 6px; text-align: right; font-weight: 600;">${UI.formatRp(item.amount)}</td>`;
+      html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    
+    if (data.length > 5) {
+      html += `<p style="margin-top: 8px; color: var(--text-muted); text-align: center;">... dan ${data.length - 5} transaksi lainnya</p>`;
+    }
+
+    contentDiv.innerHTML = html;
+    countText.textContent = `${data.length} transaksi siap diimpor`;
+    previewDiv.style.display = 'block';
+    lucide.createIcons();
+  },
+
+  doImport() {
+    if (!this.importData || this.importData.length === 0) {
+      UI.toast('Tidak ada data untuk diimpor!', 'error');
+      return;
+    }
+
+    // Add all transactions
+    let successCount = 0;
+    this.importData.forEach(trx => {
+      try {
+        DB.addTransaction(trx);
+        successCount++;
+      } catch (error) {
+        console.error('Failed to import transaction:', error);
+      }
+    });
+
+    UI.closeModal('import-modal');
+    UI.toast(`Berhasil mengimpor ${successCount} transaksi! ✅`, 'success');
+    
+    // Refresh current page
+    this.renderCurrentPage();
   },
 
   /* ===================================================
@@ -618,49 +845,7 @@ const App = {
       input.setSelectionRange(cursorPos + diff, cursorPos + diff);
     });
 
-    // --- Number Pad Events ---
-    document.querySelectorAll('.num-btn[data-num]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const num = btn.dataset.num;
-        const input = document.getElementById('trx-amount');
-        if (input) {
-          const current = input.value.replace(/\./g, '');
-          input.value = (current + num).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-          input.dispatchEvent(new Event('input'));
-        }
-      });
-    });
 
-    document.querySelector('.del-btn[data-action="backspace"]')?.addEventListener('click', () => {
-      const input = document.getElementById('trx-amount');
-      if (input && input.value.length > 0) {
-        const current = input.value.replace(/\./g, '');
-        input.value = current.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        input.dispatchEvent(new Event('input'));
-      }
-    });
-
-    // --- Budget Number Pad Events ---
-    document.querySelectorAll('.budget-num[data-num]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const num = btn.dataset.num;
-        const input = document.getElementById('budget-amount');
-        if (input) {
-          const current = input.value.replace(/\./g, '');
-          input.value = (current + num).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-          input.dispatchEvent(new Event('input'));
-        }
-      });
-    });
-
-    document.querySelector('.budget-del[data-action="backspace"]')?.addEventListener('click', () => {
-      const input = document.getElementById('budget-amount');
-      if (input && input.value.length > 0) {
-        const current = input.value.replace(/\./g, '');
-        input.value = current.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        input.dispatchEvent(new Event('input'));
-      }
-    });
 
     // --- Transaction Modal Close ---
     document.getElementById('close-trx-modal')?.addEventListener('click', () => UI.closeModal('trx-modal'));
@@ -706,6 +891,21 @@ const App = {
 
     // --- Export CSV ---
     document.getElementById('export-csv-btn')?.addEventListener('click', () => this.exportCSV());
+
+    // --- Import CSV/Excel ---
+    document.getElementById('import-csv-btn')?.addEventListener('click', () => this.openImportModal());
+    document.getElementById('close-import-modal')?.addEventListener('click', () => UI.closeModal('import-modal'));
+    document.getElementById('import-modal')?.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) UI.closeModal('import-modal');
+    });
+    
+    document.getElementById('import-file-input')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) this.handleImportFile(file);
+    });
+
+    document.getElementById('do-import-btn')?.addEventListener('click', () => this.doImport());
+    document.getElementById('download-template-btn')?.addEventListener('click', () => this.downloadTemplate());
 
     // --- Settings: Save Profile ---
     document.getElementById('save-profile-btn')?.addEventListener('click', () => {
