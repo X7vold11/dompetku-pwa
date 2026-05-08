@@ -560,67 +560,42 @@ const App = {
       return;
     }
 
-    console.log('📁 File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
-
     const reader = new FileReader();
     const fileName = file.name.toLowerCase();
 
-    reader.onerror = (error) => {
-      console.error('❌ FileReader error:', error);
+    reader.onerror = () => {
       UI.toast('Gagal membaca file. Coba lagi!', 'error');
     };
 
     reader.onload = (e) => {
       try {
-        console.log('✅ File loaded successfully');
         let data;
         
         if (fileName.endsWith('.csv')) {
-          // Parse CSV
-          console.log('📄 Parsing CSV...');
           const text = e.target.result;
-          console.log('CSV content length:', text.length);
           data = this.parseCSV(text);
-          console.log('Parsed CSV rows:', data.length);
         } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
-          // Parse Excel using SheetJS
-          console.log('📊 Parsing Excel...');
-          
-          // Check if XLSX library is loaded
           if (typeof XLSX === 'undefined') {
-            console.error('❌ XLSX library not loaded!');
             UI.toast('Library Excel belum dimuat. Refresh halaman!', 'error');
             return;
           }
           
           const arrayBuffer = e.target.result;
-          console.log('ArrayBuffer size:', arrayBuffer.byteLength);
-          
           const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-          console.log('Workbook sheets:', workbook.SheetNames);
-          
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-          console.log('Excel rows:', jsonData.length);
-          
           data = this.parseArrayData(jsonData);
         } else {
-          console.warn('⚠️ Unsupported file format:', fileName);
           UI.toast('Format file tidak didukung! Gunakan CSV atau Excel.', 'error');
           return;
         }
 
         if (!data || data.length === 0) {
-          console.warn('⚠️ No data parsed from file');
           UI.toast('File kosong atau format tidak valid!', 'error');
           return;
         }
 
-        console.log('📋 Total rows parsed:', data.length);
-
-        // Validate and prepare data
         const validData = this.validateImportData(data);
-        console.log('✅ Valid transactions:', validData.length);
         
         if (validData.length === 0) {
           UI.toast('Tidak ada data valid untuk diimpor! Periksa format data.', 'error');
@@ -630,27 +605,19 @@ const App = {
         this.importData = validData;
         this.showImportPreview(validData);
         document.getElementById('do-import-btn').disabled = false;
-        
-        console.log('🎉 Import preview ready!');
 
       } catch (error) {
-        console.error('❌ Import error:', error);
-        console.error('Error stack:', error.stack);
-        UI.toast(`Gagal: ${error.message}`, 'error');
+        UI.toast('Gagal membaca file. Pastikan format sesuai!', 'error');
       }
     };
 
-    // Read file based on type
     try {
       if (fileName.endsWith('.csv')) {
-        console.log('📖 Reading as text...');
         reader.readAsText(file);
       } else {
-        console.log('📖 Reading as array buffer...');
         reader.readAsArrayBuffer(file);
       }
     } catch (error) {
-      console.error('❌ Failed to read file:', error);
       UI.toast('Gagal membaca file. Coba lagi!', 'error');
     }
   },
@@ -966,18 +933,9 @@ const App = {
     }
     
     document.getElementById('import-file-input')?.addEventListener('change', (e) => {
-      console.log('📂 File input changed');
       const file = e.target.files[0];
       
       if (file) {
-        console.log('✅ File selected:', {
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          lastModified: new Date(file.lastModified)
-        });
-        
-        // Update button text with filename
         const displayEl = document.getElementById('file-name-display');
         if (displayEl) {
           const maxLength = 30;
@@ -988,8 +946,6 @@ const App = {
         }
         
         this.handleImportFile(file);
-      } else {
-        console.warn('⚠️ No file selected');
       }
     });
 
