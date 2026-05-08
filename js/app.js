@@ -522,6 +522,11 @@ const App = {
     this.importData = null;
     const fileInput = document.getElementById('import-file-input');
     if (fileInput) fileInput.value = '';
+    
+    // Reset display text
+    const displayEl = document.getElementById('file-name-display');
+    if (displayEl) displayEl.textContent = 'Pilih File CSV atau Excel';
+    
     document.getElementById('import-preview').style.display = 'none';
     document.getElementById('do-import-btn').disabled = true;
     
@@ -899,9 +904,36 @@ const App = {
       if (e.target === e.currentTarget) UI.closeModal('import-modal');
     });
     
+    // Trigger file input when button clicked (mobile-friendly)
+    const triggerBtn = document.getElementById('trigger-file-input');
+    const fileInput = document.getElementById('import-file-input');
+    
+    if (triggerBtn && fileInput) {
+      // Handle both click and touch events for better mobile support
+      const openFilePicker = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        fileInput.click();
+      };
+      
+      triggerBtn.addEventListener('click', openFilePicker);
+      triggerBtn.addEventListener('touchend', openFilePicker);
+    }
+    
     document.getElementById('import-file-input')?.addEventListener('change', (e) => {
       const file = e.target.files[0];
-      if (file) this.handleImportFile(file);
+      if (file) {
+        // Update button text with filename
+        const displayEl = document.getElementById('file-name-display');
+        if (displayEl) {
+          const maxLength = 30;
+          const fileName = file.name.length > maxLength 
+            ? file.name.substring(0, maxLength) + '...' 
+            : file.name;
+          displayEl.textContent = fileName;
+        }
+        this.handleImportFile(file);
+      }
     });
 
     document.getElementById('do-import-btn')?.addEventListener('click', () => this.doImport());

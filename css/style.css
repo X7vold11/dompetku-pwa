@@ -1231,6 +1231,28 @@ img { max-width: 100%; }
   cursor: pointer;
 }
 
+/* ===== File Input Wrapper (Mobile-Friendly) ===== */
+.file-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+.file-input-hidden {
+  position: absolute;
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  z-index: -1;
+}
+.file-input-wrapper .btn-outline {
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.file-input-wrapper .btn-outline:active {
+  transform: scale(0.98);
+}
+
 /* =====================================================
    TOAST
    ===================================================== */

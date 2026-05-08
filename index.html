@@ -595,7 +595,17 @@
 
         <div class="form-group">
           <label>Pilih File</label>
-          <input type="file" id="import-file-input" class="form-input" accept=".csv,.xlsx,.xls" style="padding: 10px;" />
+          <div class="file-input-wrapper">
+            <input type="file" id="import-file-input" class="file-input-hidden" accept=".csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+            <button type="button" class="btn-outline" id="trigger-file-input" style="width: 100%; justify-content: center;">
+              <i data-lucide="upload"></i>
+              <span id="file-name-display">Pilih File CSV atau Excel</span>
+            </button>
+          </div>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px;">
+            <i data-lucide="file-text" style="width: 12px; height: 12px;"></i>
+            Format: CSV, XLSX, atau XLS
+          </p>
         </div>
 
         <div id="import-preview" style="display: none;">
