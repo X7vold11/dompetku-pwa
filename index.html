@@ -642,6 +642,17 @@
 
   <!-- JavaScript -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  
+  <!-- Eruda Console for Mobile Debugging (Remove in production) -->
+  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+  <script>
+    // Auto-init Eruda on mobile devices
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      eruda.init();
+      console.log('🔍 Eruda Debug Console initialized for mobile');
+    }
+  </script>
+  
   <script src="js/db.js"></script>
   <script src="js/chart.js"></script>
   <script src="js/ui.js"></script>
