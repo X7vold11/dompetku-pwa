@@ -116,6 +116,10 @@
         </div>
       </div>
       <div class="header-right">
+        <button class="icon-btn sync-status-btn" id="sync-status-btn" aria-label="Sync Status" title="Google Sheets Sync">
+          <i data-lucide="cloud" id="sync-icon"></i>
+          <span class="sync-badge" id="sync-badge" style="display:none;"></span>
+        </button>
         <button class="icon-btn" id="theme-toggle" aria-label="Toggle Theme">
           <i data-lucide="sun" id="theme-icon"></i>
         </button>
@@ -433,6 +437,67 @@
           </div>
         </div>
 
+        <!-- Google Sheets Sync -->
+        <div class="card settings-card sync-settings-card">
+          <h3 class="settings-section-title">
+            <i data-lucide="cloud" style="width:18px;height:18px;color:var(--primary);"></i>
+            Google Sheets Sync
+          </h3>
+          <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:14px; line-height:1.5;">
+            Hubungkan ke Google Spreadsheet untuk backup dan sinkronisasi data secara otomatis.
+          </p>
+
+          <div class="form-group">
+            <label>URL Web App (Google Apps Script)</label>
+            <div style="display:flex;gap:8px;">
+              <input type="url" id="sheets-url-input" class="form-input" placeholder="https://script.google.com/macros/s/.../exec" style="flex:1;" />
+              <button class="btn-outline btn-sm" id="test-connection-btn" title="Test Koneksi" style="white-space:nowrap;">
+                <i data-lucide="zap" style="width:14px;height:14px;"></i>
+              </button>
+            </div>
+            <small style="color:var(--text-muted);margin-top:4px;display:block;">Paste URL Web App yang sudah di-deploy dari Google Apps Script</small>
+          </div>
+
+          <div class="form-group">
+            <label>Token Rahasia (Password)</label>
+            <div style="display:flex;gap:8px;">
+              <input type="password" id="sheets-token-input" class="form-input" placeholder="Masukkan token yang sama dengan di Apps Script" style="flex:1;" />
+              <button class="icon-btn" id="toggle-token-visibility" title="Tampilkan/Sembunyikan" style="flex-shrink:0;">
+                <i data-lucide="eye" id="token-eye-icon" style="width:16px;height:16px;"></i>
+              </button>
+            </div>
+            <small style="color:var(--text-muted);margin-top:4px;display:block;">Token yang sama dengan yang di-set di fungsi <code>setSecretToken()</code></small>
+          </div>
+
+          <button class="btn-primary" id="save-sheets-url-btn" style="width:100%; margin-bottom:10px;">
+            <i data-lucide="save"></i> Simpan Konfigurasi
+          </button>
+
+          <div class="sync-actions">
+            <button class="btn-outline" id="sync-pull-btn" style="flex:1;">
+              <i data-lucide="cloud-download"></i> Pull dari Sheets
+            </button>
+            <button class="btn-outline" id="sync-push-btn" style="flex:1;">
+              <i data-lucide="cloud-upload"></i> Push ke Sheets
+            </button>
+          </div>
+
+          <div class="sync-info" id="sync-info">
+            <div class="sync-info-row">
+              <span class="sync-info-label">Status:</span>
+              <span class="sync-info-value" id="sync-status-text">Belum dikonfigurasi</span>
+            </div>
+            <div class="sync-info-row">
+              <span class="sync-info-label">Terakhir sync:</span>
+              <span class="sync-info-value" id="sync-last-time">-</span>
+            </div>
+            <div class="sync-info-row">
+              <span class="sync-info-label">Antrian offline:</span>
+              <span class="sync-info-value" id="sync-pending-count">0 item</span>
+            </div>
+          </div>
+        </div>
+
         <div class="card settings-card danger-zone">
           <h3 class="settings-section-title" style="color: var(--danger);">Zona Bahaya</h3>
           <button class="btn-danger" id="clear-data-btn" style="width:100%; margin-bottom: 12px;">
@@ -643,6 +708,7 @@
   <!-- JavaScript -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <script src="js/db.js"></script>
+  <script src="js/sync.js"></script>
   <script src="js/chart.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>

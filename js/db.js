@@ -1,5 +1,5 @@
 /* =====================================================
-   DompetKu - Database Layer (localStorage)
+   DompetKu - Database Layer (localStorage + Sheets Sync)
    ===================================================== */
 
 const DB = {
@@ -23,11 +23,19 @@ const DB = {
     const newTrx = { ...trx, id: Date.now().toString(), createdAt: new Date().toISOString() };
     list.unshift(newTrx);
     this.saveTransactions(list);
+    // Sync to Google Sheets
+    if (typeof SheetsSync !== 'undefined') {
+      SheetsSync.pushTransaction(newTrx);
+    }
     return newTrx;
   },
   deleteTransaction(id) {
     const list = this.getTransactions().filter(t => t.id !== id);
     this.saveTransactions(list);
+    // Sync to Google Sheets
+    if (typeof SheetsSync !== 'undefined') {
+      SheetsSync.pushDeleteTransaction(id);
+    }
   },
   getTransactionsByMonth(year, month) {
     return this.getTransactions().filter(t => {
@@ -46,16 +54,27 @@ const DB = {
   setBudget(category, amount) {
     const list = this.getBudgets();
     const idx = list.findIndex(b => b.category === category);
+    let budgetId;
     if (idx >= 0) {
       list[idx].amount = amount;
+      budgetId = list[idx].id;
     } else {
-      list.push({ id: Date.now().toString(), category, amount });
+      budgetId = Date.now().toString();
+      list.push({ id: budgetId, category, amount });
     }
     this.saveBudgets(list);
+    // Sync to Google Sheets
+    if (typeof SheetsSync !== 'undefined') {
+      SheetsSync.pushBudget(category, amount, budgetId);
+    }
   },
   deleteBudget(category) {
     const list = this.getBudgets().filter(b => b.category !== category);
     this.saveBudgets(list);
+    // Sync to Google Sheets
+    if (typeof SheetsSync !== 'undefined') {
+      SheetsSync.pushDeleteBudget(category);
+    }
   },
 
   // ---- SETTINGS ----
@@ -67,7 +86,12 @@ const DB = {
   },
   updateSettings(patch) {
     const curr = this.getSettings();
-    this.saveSettings({ ...curr, ...patch });
+    const updated = { ...curr, ...patch };
+    this.saveSettings(updated);
+    // Sync to Google Sheets
+    if (typeof SheetsSync !== 'undefined') {
+      SheetsSync.pushSettings(patch);
+    }
   },
 
   // ---- CLEAR ALL ----
@@ -81,6 +105,10 @@ const DB = {
       localStorage.removeItem(`dompetku_${session.username}_transactions`);
       localStorage.removeItem(`dompetku_${session.username}_budgets`);
       localStorage.removeItem(`dompetku_${session.username}_settings`);
+    }
+    // Sync to Google Sheets
+    if (typeof SheetsSync !== 'undefined') {
+      SheetsSync.pushClearAll();
     }
   },
 

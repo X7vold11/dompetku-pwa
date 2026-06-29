@@ -1562,3 +1562,134 @@ body:not(.logged-in) .main-content {
     gap: 6px;
   }
 }
+
+/* =====================================================
+   GOOGLE SHEETS SYNC
+   ===================================================== */
+
+/* Sync Status Button in Header */
+.sync-status-btn {
+  position: relative;
+  transition: all var(--transition);
+}
+
+.sync-status-btn.sync-syncing {
+  animation: sync-spin-pulse 1.5s ease-in-out infinite;
+}
+
+.sync-status-btn.sync-syncing svg {
+  animation: sync-rotate 1.2s linear infinite;
+}
+
+.sync-status-btn.sync-success {
+  color: var(--income) !important;
+  background: var(--income-bg) !important;
+}
+
+.sync-status-btn.sync-error {
+  color: var(--expense) !important;
+  background: var(--expense-bg) !important;
+  animation: sync-error-shake 0.5s ease;
+}
+
+.sync-status-btn.sync-offline {
+  color: var(--text-sub) !important;
+  opacity: 0.5;
+}
+
+@keyframes sync-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes sync-spin-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+  50% { box-shadow: 0 0 0 6px rgba(124, 58, 237, 0.15); }
+}
+
+@keyframes sync-error-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-3px); }
+  40%, 80% { transform: translateX(3px); }
+}
+
+.sync-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--expense);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+/* Sync Settings Card */
+.sync-settings-card .settings-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sync-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.sync-actions .btn-outline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
+}
+
+.sync-actions .btn-outline:hover {
+  background: rgba(124, 58, 237, 0.1);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.sync-actions .btn-outline svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Sync Info Panel */
+.sync-info {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sync-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+
+.sync-info-label {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.sync-info-value {
+  font-weight: 600;
+  color: var(--text);
+}

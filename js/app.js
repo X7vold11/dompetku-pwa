@@ -26,7 +26,117 @@ const App = {
 
     this.registerServiceWorker();
     this.handlePWAInstall();
+    this.initSync();
     lucide.createIcons();
+  },
+
+  /* ===================================================
+     SYNC INITIALIZATION
+     =================================================== */
+  initSync() {
+    if (typeof SheetsSync === 'undefined') return;
+
+    SheetsSync.init();
+
+    // Listen to sync status changes and update UI
+    SheetsSync.onSyncStatusChange((status, message) => {
+      this.updateSyncStatusUI(status, message);
+    });
+
+    // Auto-sync on app start if configured & online
+    if (SheetsSync.isConfigured() && SheetsSync.isOnline()) {
+      setTimeout(() => {
+        // Flush pending queue first, then pull from Sheets
+        SheetsSync.syncAll().then(success => {
+          if (success) {
+            // Re-render current page with fresh data from Sheets
+            this.loadSettings();
+            this.renderCurrentPage();
+          }
+        });
+      }, 2500); // Wait for splash to finish
+    }
+  },
+
+  updateSyncStatusUI(status, message) {
+    const btn = document.getElementById('sync-status-btn');
+    const icon = document.getElementById('sync-icon');
+    const badge = document.getElementById('sync-badge');
+    const statusText = document.getElementById('sync-status-text');
+
+    if (!btn || !icon) return;
+
+    // Remove all status classes
+    btn.classList.remove('sync-syncing', 'sync-success', 'sync-error', 'sync-offline');
+
+    switch (status) {
+      case 'syncing':
+        btn.classList.add('sync-syncing');
+        icon.setAttribute('data-lucide', 'cloud-cog');
+        if (badge) { badge.style.display = 'none'; }
+        break;
+      case 'success':
+        btn.classList.add('sync-success');
+        icon.setAttribute('data-lucide', 'cloud');
+        if (badge) { badge.style.display = 'none'; }
+        // Auto-hide success after 3s
+        setTimeout(() => btn.classList.remove('sync-success'), 3000);
+        break;
+      case 'error':
+        btn.classList.add('sync-error');
+        icon.setAttribute('data-lucide', 'cloud-off');
+        if (badge) { badge.textContent = '!'; badge.style.display = 'block'; }
+        break;
+      case 'offline':
+        btn.classList.add('sync-offline');
+        icon.setAttribute('data-lucide', 'cloud-off');
+        if (badge) { badge.style.display = 'none'; }
+        break;
+      default: // idle
+        icon.setAttribute('data-lucide', SheetsSync.isConfigured() ? 'cloud' : 'cloud-off');
+        if (badge) {
+          const pending = SheetsSync._getPendingQueue().length;
+          if (pending > 0) {
+            badge.textContent = pending;
+            badge.style.display = 'block';
+          } else {
+            badge.style.display = 'none';
+          }
+        }
+        break;
+    }
+
+    lucide.createIcons();
+
+    // Update settings page status text if visible
+    if (statusText) statusText.textContent = message || status;
+    this.updateSyncInfoPanel();
+  },
+
+  updateSyncInfoPanel() {
+    if (typeof SheetsSync === 'undefined') return;
+
+    const lastTimeEl = document.getElementById('sync-last-time');
+    const pendingEl = document.getElementById('sync-pending-count');
+
+    if (lastTimeEl) {
+      const lastSync = SheetsSync.getLastSync();
+      if (lastSync) {
+        const d = new Date(lastSync);
+        lastTimeEl.textContent = d.toLocaleDateString('id-ID', {
+          day: 'numeric', month: 'short', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        });
+      } else {
+        lastTimeEl.textContent = '-';
+      }
+    }
+
+    if (pendingEl) {
+      const count = SheetsSync._getPendingQueue().length;
+      pendingEl.textContent = `${count} item`;
+      pendingEl.style.color = count > 0 ? 'var(--expense)' : 'var(--text-muted)';
+    }
   },
 
   checkSession() {
@@ -390,6 +500,15 @@ const App = {
     } else {
       if (installBtn) installBtn.style.display = 'none';
       if (installNote) installNote.textContent = 'Buka di Chrome/Edge lalu pilih "Add to Home Screen" 📲';
+    }
+
+    // Google Sheets Sync
+    if (typeof SheetsSync !== 'undefined') {
+      const urlInput = document.getElementById('sheets-url-input');
+      if (urlInput) urlInput.value = SheetsSync.getWebAppUrl() || '';
+      const tokenInput = document.getElementById('sheets-token-input');
+      if (tokenInput) tokenInput.value = SheetsSync.getToken() || '';
+      this.updateSyncInfoPanel();
     }
   },
 
@@ -997,6 +1116,107 @@ const App = {
 
     // --- Install PWA ---
     document.getElementById('install-btn')?.addEventListener('click', () => this.installPWA());
+
+    // --- Google Sheets Sync ---
+    document.getElementById('save-sheets-url-btn')?.addEventListener('click', () => {
+      const url = document.getElementById('sheets-url-input')?.value?.trim();
+      const token = document.getElementById('sheets-token-input')?.value?.trim();
+      if (!url) {
+        UI.toast('Masukkan URL Web App terlebih dahulu!', 'error');
+        return;
+      }
+      if (!url.startsWith('https://script.google.com/')) {
+        UI.toast('URL harus berupa URL Google Apps Script!', 'error');
+        return;
+      }
+      SheetsSync.setWebAppUrl(url);
+      if (token) SheetsSync.setToken(token);
+      UI.toast('Konfigurasi berhasil disimpan! ✅', 'success');
+      this.updateSyncInfoPanel();
+      this.updateSyncStatusUI('idle', 'Konfigurasi tersimpan');
+    });
+
+    // Toggle token visibility
+    document.getElementById('toggle-token-visibility')?.addEventListener('click', () => {
+      const input = document.getElementById('sheets-token-input');
+      const icon = document.getElementById('token-eye-icon');
+      if (!input || !icon) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.setAttribute('data-lucide', 'eye-off');
+      } else {
+        input.type = 'password';
+        icon.setAttribute('data-lucide', 'eye');
+      }
+      lucide.createIcons();
+    });
+
+    document.getElementById('test-connection-btn')?.addEventListener('click', async () => {
+      const urlInput = document.getElementById('sheets-url-input');
+      const tokenInput = document.getElementById('sheets-token-input');
+      const url = urlInput?.value?.trim();
+      const token = tokenInput?.value?.trim() || '';
+      if (!url) {
+        UI.toast('Masukkan URL terlebih dahulu!', 'error');
+        return;
+      }
+      // Temporarily set URL and token for testing
+      const prevUrl = SheetsSync.getWebAppUrl();
+      const prevToken = SheetsSync.getToken();
+      SheetsSync.setWebAppUrl(url);
+      SheetsSync.setToken(token);
+      const result = await SheetsSync.testConnection();
+      if (result.success) {
+        UI.toast('✅ Koneksi berhasil! Spreadsheet terhubung.', 'success');
+      } else {
+        UI.toast('❌ ' + result.message, 'error');
+        // Restore previous values if test failed
+        if (prevUrl) SheetsSync.setWebAppUrl(prevUrl);
+        else localStorage.removeItem(SheetsSync.STORAGE_KEY_URL);
+        SheetsSync.setToken(prevToken);
+      }
+    });
+
+    document.getElementById('sync-pull-btn')?.addEventListener('click', async () => {
+      if (!SheetsSync.isConfigured()) {
+        UI.toast('Atur URL Web App terlebih dahulu!', 'error');
+        return;
+      }
+      UI.confirm('Pull dari Sheets', 'Data di localStorage akan ditimpa dengan data dari Google Sheets. Lanjutkan?', async () => {
+        const success = await SheetsSync.pullFromSheets();
+        if (success) {
+          UI.toast('✅ Data berhasil diambil dari Sheets!', 'success');
+          this.loadSettings();
+          this.applySavedTheme();
+          this.renderCurrentPage();
+        } else {
+          UI.toast('❌ Gagal mengambil data dari Sheets', 'error');
+        }
+      });
+    });
+
+    document.getElementById('sync-push-btn')?.addEventListener('click', async () => {
+      if (!SheetsSync.isConfigured()) {
+        UI.toast('Atur URL Web App terlebih dahulu!', 'error');
+        return;
+      }
+      UI.confirm('Push ke Sheets', 'Semua data di Google Sheets akan ditimpa dengan data lokal. Lanjutkan?', async () => {
+        const success = await SheetsSync.pushAllToSheets();
+        if (success) {
+          UI.toast('✅ Semua data berhasil diunggah ke Sheets!', 'success');
+        } else {
+          UI.toast('❌ Gagal mengunggah data ke Sheets', 'error');
+        }
+      });
+    });
+
+    document.getElementById('sync-status-btn')?.addEventListener('click', () => {
+      this.navigate('pengaturan');
+      // Scroll to sync section after navigation
+      setTimeout(() => {
+        document.querySelector('.sync-settings-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 400);
+    });
 
     // --- Notification Bell ---
     document.getElementById('notif-btn')?.addEventListener('click', () => {
