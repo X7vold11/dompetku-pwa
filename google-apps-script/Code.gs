@@ -72,7 +72,56 @@ function getOrCreateSpreadsheet() {
 }
 
 /**
- * Setup sheet structure
+ * JALANKAN FUNGSI INI untuk mempercantik tampilan Spreadsheet yang sudah ada
+ * Fungsi ini tidak akan menghapus data kamu, hanya mengatur warna dan ukuran tabel.
+ */
+function formatSpreadsheet() {
+  const ss = getOrCreateSpreadsheet();
+  
+  const formatHeader = (sheet, cols) => {
+    if (!sheet) return;
+    const range = sheet.getRange(1, 1, 1, cols);
+    range.setFontWeight('bold');
+    range.setBackground('#7C3AED'); // Primary color DompetKu
+    range.setFontColor('#FFFFFF');
+    range.setHorizontalAlignment('center');
+    sheet.setFrozenRows(1); // Bekukan baris pertama
+  };
+
+  const trxSheet = ss.getSheetByName('Transactions');
+  if (trxSheet) {
+    formatHeader(trxSheet, 8);
+    trxSheet.setTabColor('#10B981'); // Tab hijau
+    trxSheet.setColumnWidth(1, 120);
+    trxSheet.setColumnWidth(3, 110);
+    trxSheet.setColumnWidth(4, 130);
+    trxSheet.setColumnWidth(6, 250);
+    trxSheet.setColumnWidth(7, 120);
+    trxSheet.setColumnWidth(8, 180);
+  }
+  
+  const budgetSheet = ss.getSheetByName('Budgets');
+  if (budgetSheet) {
+    formatHeader(budgetSheet, 3);
+    budgetSheet.setTabColor('#2563EB'); // Tab biru
+    budgetSheet.setColumnWidth(1, 120);
+    budgetSheet.setColumnWidth(2, 150);
+    budgetSheet.setColumnWidth(3, 120);
+  }
+  
+  const settingsSheet = ss.getSheetByName('Settings');
+  if (settingsSheet) {
+    formatHeader(settingsSheet, 2);
+    settingsSheet.setTabColor('#64748B'); // Tab abu-abu
+    settingsSheet.setColumnWidth(1, 150);
+    settingsSheet.setColumnWidth(2, 250);
+  }
+  
+  Logger.log('✨ Tampilan Spreadsheet berhasil dipercantik!');
+}
+
+/**
+ * Setup sheet structure untuk spreadsheet baru
  */
 function setupSheets(ss) {
   // Sheet 1: Transactions
@@ -85,7 +134,6 @@ function setupSheets(ss) {
   trxSheet.getRange(1, 1, 1, 8).setValues([
     ['id', 'type', 'amount', 'category', 'emoji', 'description', 'date', 'createdAt']
   ]);
-  trxSheet.getRange(1, 1, 1, 8).setFontWeight('bold');
   
   // Sheet 2: Budgets
   let budgetSheet = ss.getSheetByName('Budgets');
@@ -96,7 +144,6 @@ function setupSheets(ss) {
   budgetSheet.getRange(1, 1, 1, 3).setValues([
     ['id', 'category', 'amount']
   ]);
-  budgetSheet.getRange(1, 1, 1, 3).setFontWeight('bold');
   
   // Sheet 3: Settings
   let settingsSheet = ss.getSheetByName('Settings');
@@ -107,7 +154,6 @@ function setupSheets(ss) {
   settingsSheet.getRange(1, 1, 1, 2).setValues([
     ['key', 'value']
   ]);
-  settingsSheet.getRange(1, 1, 1, 2).setFontWeight('bold');
   
   // Default settings
   settingsSheet.getRange(2, 1, 3, 2).setValues([
@@ -115,6 +161,9 @@ function setupSheets(ss) {
     ['avatar', '🎓'],
     ['darkMode', 'true']
   ]);
+  
+  // Aplikasikan warna & ukuran kolom
+  formatSpreadsheet();
 }
 
 /**
